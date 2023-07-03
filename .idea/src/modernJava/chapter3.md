@@ -53,3 +53,110 @@ process(() -> System.out.println("hello world3")); //직접 전달된 람다표�
 
 ## 3.2.3 Predicate
 제네릭 형식의 T의 객체를 인수로 받아 불리언을 반환한다.
+```
+@FunctionalInterface
+public interface Predicate<T> {
+    boolean test(T t);
+}
+
+public <T> List<T> filter(List<T> list, Predicate<T> p) {
+    List<T> results = new ArrayList<>();
+    for(T t: list) {
+        if(p.test(t)) {
+            results.add(t);
+        }
+        return results;
+    }
+}
+
+Predicate<String> nonEmptyStringPredicate =  (String s) -> !s.isEmpty();
+List<String> nonEmpty = filter(list, nonEmptyStringPredicate);
+
+```
+## 3.2.4 Consumer
+제네릭 형식 T 객체를 받아서 void를 반환하는 accept 추상메서드 정의
+```
+@FunctionalInterface
+public interface Consumer<T> {
+    void accept(T t);
+}
+
+public <T> void forEach(List<T> list, Consumer<T> c) {
+    for(T t : list) {
+        c.accept(t);
+    }
+}
+forEach(
+        Arrays.asList(1,2,3,4,5),
+        (Integer i) -> System.out.println(i);
+)
+```
+
+## 3.2.5 Function
+java.util.function.Function<T,R> 인터페이스는 제네릭 형식 T를 인수로 받아서 제네릭 형식 R객체를 반환하는
+추상 메서드 apply를 정의한다.
+```
+@FunctionalInterface
+public interface Function<T,R> {
+    R apply(T t);
+}
+
+public <T,R> List<R> map(List<T> list, Function<T,R> f) {
+    List<R> result = new ArrayList<>();
+    for(T t : list) {
+        result.add(f.apply(t));
+    }
+    return result;
+}
+
+List<Integer> l = map(
+        Arrays.asList("lambdas", "in", "action"),
+        (String s ) -> s.length()
+);
+```
+
+## 3.2.6 기본형 특화
+제네릭은 참조형만 사용할 수 있으므로 오토박싱이 일어나 메모리를 더 소비하게 된다. 그래서 자바 8에서는
+기본형을 입출력으로 사용하는 상황에서 오토박싱을 피할 수 있도록 특별한 버전의 함수형 인터페이스 제공
+```
+public interface IntPredicate {
+    boolean test(int t);
+}
+
+IntPredicate evenNumbers = (int i) -> i % 2 == 0;
+evenNumbers(1000); (박싱 없음)
+
+Predicate<Integer> oddNumbers = (Integer i) -> i % 2 != 0;
+oddNumbers.test(1000); (박싱)
+
+```
+
+## 3.2.7 함수형 인터페이스 예외처리
+함수형 인터페이스는 확인된 예외를 던지는 동작을 허용하지 않는다. 즉, 예외를 던지는 람다표현식을
+만들려면 확인된 예외를 선언하는 함수형 인터페이스를 직접 정의하거나 람다를 try/catch 블록으로 감싸야 한다.
+
+## 3.3 형식 검사, 형식 추론, 제약
+1) 형식검사
+
+```
+List<Apple> heavierThan150g = filter(inventory, (Apple apple) -> apple.getWeight() > 150);
+```
+여기서 두 번째 파라미터로 Predicate<Apple> 형식(대상형식)을 기대한다. Predicate<Apple> 인터페이스의 추상메서드는 무엇인가?
+Apple을 인수로 받아 boolean을 반환하는 test 메서드다. 함수 디스크립터는 Apple -> boolean 이므로 람다의 시그니처와 일치한다.
+
+2) 같은 람다, 다른 함수형 인터페이스
+
+대상 형식이라는 특징 때문에 같은 람다 표현식이더라도 호환되는 추상 메서드를 가진 다른 함수형 인터페이스로 사용될 수 있다. 아래 코드는 모두 유효하다
+```
+Callable<Integer> c = () -> 42;
+PrivlegedAction<Integer> p  = () -> 42;
+```
+
+
+3) 특별한 void 호환 규칙
+
+람다의 바디에 일반 표현식이 있으면 void를 반환하는 함수 디스크립터와 호환된다.
+아래코드는 유효한 코드다.
+```
+Consumer<String> b = s -> list.add(s);
+```
