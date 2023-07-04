@@ -180,4 +180,63 @@ Comparator<Apple> c = (a, b) -> a1.getWeight().compareTo(a2.getWeight());
     int portNumber = 1377;
     Runnable r = () -> System.out.println(portNumber);
 ```
-하지만 자유변수에도 약간의 제약이 있는데 
+하지만 자유변수에도 약간의 제약이 있는데 지역변수는 명시적으로 final로 선언되어 있어야 하거나 실질적으로 final로
+선언된 변수와 똑같이 사용되어야 한다. 즉, 람다표현식은 한 번만 할당할 수 있는 지역변수를 캡쳐할 수 있다.
+인스턴스 변수 캡처는 final 지역변수 this를 캡처하는 것과 마찬가지다.
+```
+    int portNumber = 1377;
+    Runnable r = () -> System.out.println(portNumber);
+    portNumber = 1377; //에러
+```
+이런 제약은 인스턴스변수와 지역변수의 태생에서 온다. 인스턴스 변수는 힙에 저장되는 반면 지역 변수는 스택에 위치한다.
+람다에서 지역변수에 바로 접근할 수 있다는 가정하에 람다가 스레드에서 실행된다면 변수를 할당한 스레드가 사라져서
+변수 할당이 해제되었는데도 람다를 실행하는 스레드에서는 해당 변수에 접근하려 할 수 있다. 따라서 자바 구현에서는 원래
+변수에 접근을 허용하는 것이 아니라 자유 지역 변수의 복사본을 제공한다. 따라서 복사본의 값이 바뀌지 않아야
+하므로 지역 변수에는 한 번만 값을 할당해야 하는 제약이 생긴것이다.
+
+## 3.4 메서드 참조
+메서드 참조는 특정 메서드만을 호출하는 람다의 축약형.
+```
+    (Apple apple) -> apple.getWeight()  |  Apple::getWeight
+    () -> Thread.currentThread().dumpstack() | Thread.currentThread()::dumpstack
+    (str, i) -> str.substring(i) | String::substring
+    (String s) -> System.out.println(s) | System.out::println
+    (String s) -> this.isValidName(s) | this::isValidName
+```
+메서드 참조를 만드는 방법
+1) 정적 메서드 참조
+Integer의 parseInt 메서드 Integer::parseInt로 표현
+```
+    (args) -> ClassName.staticMethod(args)
+    ClassName::staticMethod
+```
+2) 다양한 형식의 인스턴스 메서드 참조
+String의 length 메서드는 String::length로 표현
+```
+    (arg0, rest) -> arg0.instanceMethod(rest)
+    ClassName::instanceMethod
+```
+3) 기존 객체의 인스턴스 메서드 참조
+```
+    (args) -> expr.instanceMethod(args)
+    expr::instanceMethod
+```
+
+## 3.5 생성자 참조
+
+ClassName::new처럼 new 키워드를 이용해서 기존 생성자의 참조를 만들 수 있다.
+```
+ Supplier<Apple> c1 = Apple::new;
+ Apple a1 = c1.get();
+ 
+ Supplier<Apple> c1 = () -> new Apple();
+ Apple a2 = c1.get();
+```
+
+```
+ Function<Integer, Apple> c2 = Apple::new;
+ Apple a1 = c2.apply(10);
+ 
+ Function<Integer, Apple> c2 = (weight) -> new Apple(weight);
+ Apple a2 = c2.apply(10);
+```
