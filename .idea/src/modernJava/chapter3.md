@@ -160,3 +160,24 @@ PrivlegedAction<Integer> p  = () -> 42;
 ```
 Consumer<String> b = s -> list.add(s);
 ```
+
+
+4) 형식 추론
+
+자바 컴파일러는 람다 표현식이 사용된 콘텍스트(대상 형식)를 이용해서 람다 표현식과 관련된 함수형 인터페이스를 추론한다.
+즉, 대상 형식을 이용해서 함수 디스크립터를 알 수 있으므로 컴파일러는 람다의 시그니처도 추론할 수 있다.
+결과적으로 컴파일러는 람다 표현식의 파라미터 형식에 접근할 수 있으므로 람다 문법에서 이를 생략할 수 있다.
+
+```
+Comparator<Apple> c = (Apple a, Apple b) -> a1.getWeight().compareTo(a2.getWeight());
+Comparator<Apple> c = (a, b) -> a1.getWeight().compareTo(a2.getWeight());
+```
+
+5) 지역변수 사용
+람다식은 익명함수처럼 자유변수(파라미터로 넘겨진 변수가 아닌 외부에서 정의된 변수)를 활용할 수 있다. 이와 같은 동작을
+람다캡처링이라고 부른다.
+```
+    int portNumber = 1377;
+    Runnable r = () -> System.out.println(portNumber);
+```
+하지만 자유변수에도 약간의 제약이 있는데 
